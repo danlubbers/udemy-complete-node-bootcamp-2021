@@ -1,0 +1,25 @@
+{
+  "name": "node-farm",
+  "version": "1.0.0",
+  "description": "Learning node.js",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danlubbers/udemy-complete-node-bootcamp-2021.git"
+  },
+  "author": "Dan Lubbers",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/danlubbers/udemy-complete-node-bootcamp-2021/issues"
+  },
+  "homepage": "https://github.com/danlubbers/udemy-complete-node-bootcamp-2021#readme",
+  "dependencies": {
+    "slugify": "~1.5.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  }
+}

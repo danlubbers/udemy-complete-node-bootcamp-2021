@@ -1,6 +1,8 @@
-const fs = require("fs"); // file system
-const http = require("http"); // networking capabilities
-const url = require("url"); // routing
+const fs = require('fs'); // file system
+const http = require('http'); // networking capabilities
+const url = require('url'); // routing
+const slugify = require('slugify');
+const replaceTemplate = require('./modules/replaceTemplate');
 
 //////////////////////////////////////////////////////////////
 // FILES
@@ -32,25 +34,66 @@ const url = require("url"); // routing
 //////////////////////////////////////////////////////////////
 // SERVER
 
+const templateOverview = fs.readFileSync(
+  `${__dirname}/templates/template-overview.html`,
+  'utf-8'
+);
+const templateCard = fs.readFileSync(
+  `${__dirname}/templates/template-card.html`,
+  'utf-8'
+);
+const templateProduct = fs.readFileSync(
+  `${__dirname}/templates/template-product.html`,
+  'utf-8'
+);
+
+const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, 'utf-8');
+const dataObj = JSON.parse(data);
+
+const slugs = dataObj.map((el) => slugify(el.productName, { lower: true }));
+console.log(slugs);
+
 const server = http.createServer((req, res) => {
-  console.log(req.url);
+  const { pathname, query } = url.parse(req.url, true);
 
-  const pathname = req.url;
+  // Overview Page
+  if (pathname === '/' || pathname === '/overview') {
+    res.writeHead(200, {
+      'Content-type': 'text/html',
+    });
 
-  if (pathname === "/" || pathname === "/overview") {
-    res.end("This is the Overview");
-  } else if (pathname === "/product") {
-    res.end("This is the Product");
+    const cardsHTML = dataObj
+      .map((el) => replaceTemplate(templateCard, el))
+      .join('');
+    const output = templateOverview.replace('{%PRODUCT_CARDS%}', cardsHTML);
+    res.end(output);
+
+    // PRODUCT
+  } else if (pathname === '/product') {
+    res.writeHead(200, {
+      'Content-type': 'text/html',
+    });
+    const product = dataObj[query.id];
+
+    const output = replaceTemplate(templateProduct, product);
+    res.end(output);
+
+    // API
+  } else if (pathname === '/api') {
+    res.writeHead(200, { 'Content-type': 'application/json' });
+    res.end(data);
+
+    // Not found
   } else {
     res.writeHead(404, {
-      "Content-type": "text/html",
+      'Content-type': 'text/html',
     });
-    res.end("page not found!");
+    res.end('page not found!');
   }
 
   // res.end("Server Communication!!!");
 });
 
-server.listen(8000, "127.0.0.1", () => {
-  console.log("Listening on port 8000");
+server.listen(8000, '127.0.0.1', () => {
+  console.log('Listening on port 8000');
 });
