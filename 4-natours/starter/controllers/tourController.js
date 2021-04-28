@@ -3,7 +3,25 @@ const Tour = require('../models/tourModel');
 // Route handlers
 exports.getAllTours = async (req, res) => {
   try {
-    const tours = await Tour.find();
+    // BUILD QUERY
+    // 1. Filtering
+    const queryObj = { ...req.query }; // create shallow copy
+    const excludedFields = ['page', 'sort', 'limit', 'fields'];
+    // Loop over obj and deleted excluded fields
+    excludedFields.forEach((el) => delete queryObj[el]);
+
+    console.log(req.query, queryObj);
+
+    // ADVANCED FITERING - add $ in front for mongoose filtering
+    let queryStr = JSON.stringify(queryObj);
+    // regex to find "gte, gt, lte, lt"
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+    console.log(queryStr);
+    const query = Tour.find(JSON.parse(queryStr));
+
+    // EXECUTE QUERY
+    const tours = await query;
+    // SEND RESPONSE
     res.status(200).json({
       status: 'success',
       results: tours.length,
