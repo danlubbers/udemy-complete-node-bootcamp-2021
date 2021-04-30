@@ -49,6 +49,7 @@ const tourSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now(),
+    select: false, // this hides the data from postman EX. Can be used for password fields
   },
   startDates: [Date],
 });

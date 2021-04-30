@@ -12,12 +12,29 @@ exports.getAllTours = async (req, res) => {
 
     console.log(req.query, queryObj);
 
-    // ADVANCED FITERING - add $ in front for mongoose filtering
+    // ADVANCED FILTERING - add $ in front for mongoose filtering
     let queryStr = JSON.stringify(queryObj);
     // regex to find "gte, gt, lte, lt"
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-    console.log(queryStr);
-    const query = Tour.find(JSON.parse(queryStr));
+
+    let query = Tour.find(JSON.parse(queryStr));
+
+    // SORTING
+    if (req.query.sort) {
+      const sortBy = req.query.sort.split(',').join(' ');
+
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort('-createdAt');
+    }
+
+    // FIELD LIMITING
+    if (req.query.fields) {
+      const fields = req.query.fields.split(',').join(' ');
+      query = query.select(fields);
+    } else {
+      query = query.select('-__v');
+    }
 
     // EXECUTE QUERY
     const tours = await query;
