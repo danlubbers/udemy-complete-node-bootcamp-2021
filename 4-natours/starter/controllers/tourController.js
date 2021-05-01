@@ -1,43 +1,25 @@
 const Tour = require('../models/tourModel');
+const APIFeatures = require('../utils/apiFeatures');
+
+exports.aliasTopTours = (req, res, next) => {
+  req.query.limit = '5';
+  req.query.sort = '-ratingsAverage,price';
+  req.query.fields = 'name,price,ratingsAverage,summary,difficulty';
+  next();
+};
 
 // Route handlers
 exports.getAllTours = async (req, res) => {
   try {
-    // BUILD QUERY
-    // 1. Filtering
-    const queryObj = { ...req.query }; // create shallow copy
-    const excludedFields = ['page', 'sort', 'limit', 'fields'];
-    // Loop over obj and deleted excluded fields
-    excludedFields.forEach((el) => delete queryObj[el]);
-
-    console.log(req.query, queryObj);
-
-    // ADVANCED FILTERING - add $ in front for mongoose filtering
-    let queryStr = JSON.stringify(queryObj);
-    // regex to find "gte, gt, lte, lt"
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-
-    let query = Tour.find(JSON.parse(queryStr));
-
-    // SORTING
-    if (req.query.sort) {
-      const sortBy = req.query.sort.split(',').join(' ');
-
-      query = query.sort(sortBy);
-    } else {
-      query = query.sort('-createdAt');
-    }
-
-    // FIELD LIMITING
-    if (req.query.fields) {
-      const fields = req.query.fields.split(',').join(' ');
-      query = query.select(fields);
-    } else {
-      query = query.select('-__v');
-    }
+    /** MOVED ALL OF THE FUNCTIONS OUT OF THE CODE TO THE CLASS APIFEATURES TO UTILIZE CHAINING METHODS **/
 
     // EXECUTE QUERY
-    const tours = await query;
+    const features = new APIFeatures(Tour.find(), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .pagination();
+    const tours = await features.query;
     // SEND RESPONSE
     res.status(200).json({
       status: 'success',
