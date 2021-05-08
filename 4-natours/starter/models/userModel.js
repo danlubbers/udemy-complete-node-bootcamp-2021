@@ -43,6 +43,11 @@ const userSchema = new mongoose.Schema({
   passwordChangedAt: Date,
   passwordResetToken: String,
   passwordResetExpires: Date,
+  active: {
+    type: Boolean,
+    default: true,
+    select: false,
+  },
 });
 
 userSchema.pre('save', async function (next) {
@@ -54,6 +59,19 @@ userSchema.pre('save', async function (next) {
 
   // Delete passwordConfirmation field as we don't need this in the DB
   this.passwordConfirmation = undefined;
+  next();
+});
+
+userSchema.pre('save', function (next) {
+  if (!this.isModified('password' || this.isNew)) return next();
+
+  this.passwordChangedAt = Date.now() - 1000; // We subtract 1sec from the present time to ensure token is created after the password has been changed
+  next();
+});
+
+userSchema.pre(/^find/, function (next) {
+  // this points to current query
+  this.find({ active: { $ne: false } }); // find only documents with active not set to false
   next();
 });
 

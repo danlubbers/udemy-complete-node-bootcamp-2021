@@ -1,15 +1,27 @@
+const crypto = require('crypto');
 const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const sendEmail = require('../utils/email');
-const { userInfo } = require('os');
 
 const signToken = (id) =>
   jwt.sign({ id: id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
+
+const createAndSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
+
+  res.status(statusCode).json({
+    status: 'success',
+    token: token,
+    data: {
+      user: user,
+    },
+  });
+};
 
 exports.signup = catchAsync(async (req, res, next) => {
   // DO NOT USE just req.body as it's a security flaw
@@ -23,15 +35,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     role: req.body.role,
   });
 
-  const token = signToken(newUser._id);
-
-  res.status(201).json({
-    status: 'success',
-    token: token,
-    data: {
-      user: newUser,
-    },
-  });
+  createAndSendToken(newUser, 201, res);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -54,11 +58,7 @@ exports.login = catchAsync(async (req, res, next) => {
   }
 
   // 3. If everything ok, send token to the client
-  const token = signToken(user._id);
-  res.status(200).json({
-    status: 'success',
-    token,
-  });
+  createAndSendToken(user, 200, res);
 });
 
 exports.protect = catchAsync(async (req, res, next) => {
@@ -158,4 +158,51 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   }
 });
 
-exports.resetPassword = (req, res, next) => {};
+exports.resetPassword = catchAsync(async (req, res, next) => {
+  // 1. Get user based on the token
+  const hashedToken = crypto
+    .createHash('sha256')
+    .update(req.params.token)
+    .digest('hex');
+
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() }, // mongoose checks if token has not yet expired
+  });
+  // 2. If token as not expired and there is user, set new password
+  if (!user) {
+    return next(new AppError('Token is invalid or has expired', 400));
+  }
+
+  // 3. Update changedPasswordAt property for the user
+  // This only modifies the document, but we still need to save it
+  user.password = req.body.password;
+  user.passwordConfirmation = req.body.passwordConfirmation;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+
+  // Save it
+  await user.save();
+
+  // 4. Log the user in, send the JWT
+  createAndSendToken(user, 200, res);
+});
+
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  // 1. Get user from collection
+  const user = await User.findById(req.user.id).select('+password');
+
+  // 2. Check if POSTed password is correct
+  if (await !user.correctPassword(req.body.passwordCurrent, user.password)) {
+    return next(new AppError('Your current password is wrong.', 401));
+  }
+
+  // 3. If so, update password
+  user.password = req.body.password;
+  user.passwordConfirmation = req.body.passwordConfirmation;
+  await user.save();
+  // User.findByIdAndUpdate will NOT work as intended!
+
+  // 4. Log user in, send JWT
+  createAndSendToken(user, 200, res);
+});
