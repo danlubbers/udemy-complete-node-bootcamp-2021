@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
+// const User = require('./userModel'); // Sample used for embedded guides
 // const validator = require('validator');
 
 const tourSchema = new mongoose.Schema(
@@ -84,6 +85,37 @@ const tourSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    startLocation: {
+      // GeoJSON
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      coordinates: [Number], // long, lat
+      address: String,
+      description: String,
+    },
+    // Creating Embedded documents
+    locations: [
+      {
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point'],
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+        day: Number,
+      },
+    ],
+    guides: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+      },
+    ],
   },
   // Schema options to add Virtual Property to response
   {
@@ -103,6 +135,14 @@ tourSchema.pre('save', function (next) {
   next(); // calls the next middleware in the stack
 });
 
+// SAMPLE CODE FOR EMBEDDING:
+// guides in schema needs to be | guides: Array | for it to work - Only works for Creating New documents
+// tourSchema.pre('save', async function (next) {
+//   const guidesPromises = this.guides.map((id) => User.findById(id));
+//   this.guides = await Promise.all(guidesPromises);
+//   next();
+// });
+
 // tourSchema.pre('save', function (next) {
 //   console.log('Will Save document!!!');
 //   next();
@@ -118,6 +158,15 @@ tourSchema.pre(/^find/, function (next) {
   this.find({ secretTour: { $ne: true } });
 
   this.start = Date.now();
+  next();
+});
+
+tourSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangedAt',
+  });
+
   next();
 });
 
