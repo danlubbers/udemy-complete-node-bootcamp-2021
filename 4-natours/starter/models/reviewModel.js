@@ -35,10 +35,16 @@ const reviewSchema = new mongoose.Schema(
 
 // This adds two queries. One to populate tour and other user. Adds additional response time
 reviewSchema.pre(/^find/, function (next) {
+  // this.populate({
+  //   path: 'tour',
+  //   select: '-guides name',
+  // }).populate({
+  //   path: 'user',
+  //   select: 'name',
+  // });
+
+  // Don't need to populate tour info for reviews so copied from above and got rid of that code
   this.populate({
-    path: 'tour',
-    select: '-guides name',
-  }).populate({
     path: 'user',
     select: 'name',
   });
@@ -48,3 +54,8 @@ reviewSchema.pre(/^find/, function (next) {
 const Review = mongoose.model('Review', reviewSchema);
 
 module.exports = Review;
+
+// Nested Routes - get which tour and which user for creating review
+// POST /<tour>/<USERID>/reviews
+// GET /<tour>/<USERID>/reviews
+// GET /<tour>/<USERID>/reviews/<REVIEW ID>

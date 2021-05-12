@@ -129,6 +129,13 @@ tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
 });
 
+// Virtual Populate: Connecting two models together
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'tour', // connect to tour in tourController
+  localField: '_id',
+});
+
 // DOCUMENT MIDDLEWARE: runs before the .save() and .creat()
 tourSchema.pre('save', function (next) {
   this.slug = slugify(this.name, { lower: true });
