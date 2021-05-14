@@ -76,6 +76,7 @@ exports.getAll = (Model) =>
       .sort()
       .limitFields()
       .pagination();
+    // const doc = await features.query.explain(); // explain allows us to check in postman the indexed documents in executionStats: totalDocsExamined
     const doc = await features.query;
     // SEND RESPONSE
     res.status(200).json({
