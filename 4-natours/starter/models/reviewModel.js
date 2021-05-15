@@ -34,6 +34,9 @@ const reviewSchema = new mongoose.Schema(
   }
 );
 
+// Prevents user from writing multiple reviews under the same tour. A user should only be able to write 1 review per tour
+reviewSchema.index({ tour: 1, user: 1 }, { unique: true });
+
 // This adds two queries. One to populate tour and other user. Adds additional response time
 reviewSchema.pre(/^find/, function (next) {
   // this.populate({
