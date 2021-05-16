@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
@@ -14,7 +15,15 @@ const reviewRouter = require('./routes/reviewRoutes');
 
 const app = express();
 
+app.set('view engine', 'pug'); // setup PUG templating engine
+
+app.set('views', path.join(__dirname, 'views')); // this goes to './views' directory
+
 // Global Middleware
+
+// Serving static files
+// app.use(express.static(`${__dirname}/public`)); // without path
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Set security for HTTP Headers
 app.use(helmet());
@@ -60,9 +69,6 @@ app.use(
   })
 );
 
-// Serving static files
-app.use(express.static(`${__dirname}/public`));
-
 // app.use((req, res, next) => {
 //   // console.log('🔥🔥🔥 MIDDLEWARE 🔥🔥🔥');
 //   next();
@@ -76,6 +82,13 @@ app.use((req, res, next) => {
 });
 
 // Mounting ROUTES
+app.get('/', (req, res) => {
+  res.status(200).render('base', {
+    tour: 'The Forest Hiker',
+    user: 'Jonas',
+  });
+});
+
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);
