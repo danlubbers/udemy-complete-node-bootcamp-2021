@@ -50,7 +50,7 @@ reviewSchema.pre(/^find/, function (next) {
   // Don't need to populate tour info for reviews so copied from above and got rid of that code
   this.populate({
     path: 'user',
-    select: 'name',
+    select: 'name photo',
   });
   next();
 });
