@@ -24,7 +24,7 @@ exports.getTour = catchAsync(async (req, res) => {
   });
 
   res.status(200).render('tour', {
-    title: 'The Snow Adventurer',
+    title: `${tour.name} Tour`,
     tour,
   });
 });
