@@ -6,6 +6,8 @@ const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
+const cookieParser = require('cookie-parser');
+// const axios = require('axios');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
@@ -59,6 +61,7 @@ app.use(
     limit: '10kb',
   })
 );
+app.use(cookieParser());
 
 // Data Sanitization against NOSQL query injection
 app.use(mongoSanitize());
@@ -89,6 +92,7 @@ app.use(
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
   // console.log(req.headers);
+  console.log(req.cookies);
   next();
 });
 
