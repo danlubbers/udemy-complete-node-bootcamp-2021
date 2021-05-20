@@ -124,6 +124,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   }
   // GRANT ACCESS TO THE PROTECTED ROUTE
   req.user = currentUser;
+  res.locals.user = currentUser; //  set res.locals.use so we can use the currentUser in the account.pug template
   next();
 });
 
