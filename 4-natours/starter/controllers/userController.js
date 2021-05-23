@@ -1,20 +1,25 @@
 const multer = require('multer');
+const sharp = require('sharp');
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const factory = require('./handlerFactory');
 
+// COMMENTED OUT and changed due to using Sharp below
 // How we store our files ( Ex. Upload User photo )
-const multerStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'public/img/users');
-  },
-  filename: (req, file, cb) => {
-    // user-userId-timestamp-fileExtension
-    const extension = file.mimetype.split('/')[1];
-    cb(null, `user-${req.user.id}-${Date.now()}.${extension}`);
-  },
-});
+// const multerStorage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, 'public/img/users');
+//   },
+//   filename: (req, file, cb) => {
+//     // user-userId-timestamp-fileExtension
+//     const extension = file.mimetype.split('/')[1];
+//     cb(null, `user-${req.user.id}-${Date.now()}.${extension}`);
+//   },
+// });
+
+// image stored as a buffer which is available on req.file.buffer
+const multerStorage = multer.memoryStorage();
 
 const multerFilter = (req, file, cb) => {
   if (file.mimetype.startsWith('image')) {
@@ -30,6 +35,21 @@ const upload = multer({
 });
 
 exports.uploadUserPhoto = upload.single('photo');
+
+exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
+  if (!req.file) return next();
+
+  req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
+
+  // Image processing
+  await sharp(req.file.buffer)
+    .resize(500, 500) // width and height
+    .toFormat('jpeg') // convert to jpeg
+    .jpeg({ quality: 90 }) // compression
+    .toFile(`public/img/users/${req.file.filename}`); // save to directory
+
+  next();
+});
 
 const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
