@@ -1,6 +1,6 @@
 const nodemailer = require('nodemailer');
 const pug = require('pug');
-const htmlToText = require('html-to-text');
+// const htmlToText = require('html-to-text');
 
 module.exports = class Email {
   constructor(user, url) {
@@ -10,10 +10,18 @@ module.exports = class Email {
     this.from = `Dan Lubbers <${process.env.EMAIL_FROM}>`;
   }
 
+  // This doesn't work for me as my Sender Identity is not verified and I'm not setting that up for a tutorial
+  // Error: Message failed: 550 The from address does not match a verified Sender Identity. Mail cannot be sent until this error is resolved
   newTransport() {
     if (process.env.NODE_ENV === 'production') {
       // Sendgrid
-      return 1;
+      return nodemailer.createTransport({
+        service: 'SendGrid',
+        auth: {
+          user: process.env.SENDGRID_USERNAME,
+          pass: process.env.SENDGRID_PASSWORD,
+        },
+      });
     }
     return nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
