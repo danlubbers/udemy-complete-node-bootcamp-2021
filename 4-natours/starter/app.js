@@ -7,7 +7,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
 const cookieParser = require('cookie-parser');
-// const axios = require('axios');
+const compression = require('compression');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
@@ -89,6 +89,9 @@ app.use(
 //   // console.log('🔥🔥🔥 MIDDLEWARE 🔥🔥🔥');
 //   next();
 // });
+
+// Compresses all text that is sent to clients
+app.use(compression());
 
 // Testing Middleware
 app.use((req, res, next) => {
