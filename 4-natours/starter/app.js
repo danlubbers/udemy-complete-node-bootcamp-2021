@@ -20,6 +20,8 @@ const viewRouter = require('./routes/viewRoutes');
 
 const app = express();
 
+app.enable('trust proxy'); // used for secure connection with Heroku with req.headers in authController
+
 app.set('view engine', 'pug'); // setup PUG templating engine
 
 app.set('views', path.join(__dirname, 'views')); // this goes to './views' directory
