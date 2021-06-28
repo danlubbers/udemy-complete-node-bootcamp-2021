@@ -9,6 +9,7 @@ const xss = require('xss-clean');
 const hpp = require('hpp');
 const cookieParser = require('cookie-parser');
 const compression = require('compression');
+const cors = require('cors');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
@@ -27,6 +28,12 @@ app.set('view engine', 'pug'); // setup PUG templating engine
 app.set('views', path.join(__dirname, 'views')); // this goes to './views' directory
 
 // Global Middleware
+// Implement CORS
+app.use(cors());
+// Access-Control-Allow-Origin * ( * allows access to everything )
+
+// This allows for all complex requests EX. Delete or patch request
+app.options('*', cors());
 
 // Serving static files
 // app.use(express.static(`${__dirname}/public`)); // without path
